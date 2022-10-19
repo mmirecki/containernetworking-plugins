@@ -101,6 +101,7 @@ func main() {
 }
 
 func cmdAdd(args *skel.CmdArgs) error {
+	debugLog("\n\n=========== main.go: Starting ADD COMMAND \n\n")
 	// Plugin must return result in same version as specified in netconf
 	versionDecoder := &version.ConfigDecoder{}
 	confVersion, err := versionDecoder.Decode(args.StdinData)
@@ -109,9 +110,12 @@ func cmdAdd(args *skel.CmdArgs) error {
 	}
 
 	result := &current.Result{CNIVersion: current.ImplementedSpecVersion}
+	debugLog("\n\n=========== main.go: before RPC CALL\n")
 	if err := rpcCall("DHCP.Allocate", args, result); err != nil {
 		return err
 	}
+	debugLog("\n\n=========== main.go: after RPC CALL\n")
+	debugLog(fmt.Sprintf("\n\n=========== main.go: result:  %+v\n", result))
 
 	return types.PrintResult(result, confVersion)
 }
@@ -177,4 +181,13 @@ func rpcCall(method string, args *skel.CmdArgs, result interface{}) error {
 	}
 
 	return nil
+}
+
+func debugLog(msg string) {
+	f, err := os.OpenFile("/tmp/dhcp_log", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	if err != nil {
+		fmt.Printf("err: %+v", err)
+	}
+	defer f.Close()
+	_, err = f.Write([]byte(msg))
 }

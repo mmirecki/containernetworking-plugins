@@ -69,10 +69,13 @@ func generateClientID(containerID string, netName string, ifName string) string 
 // Allocate acquires an IP from a DHCP server for a specified container.
 // The acquired lease will be maintained until Release() is called.
 func (d *DHCP) Allocate(args *skel.CmdArgs, result *current.Result) error {
+	debugLog(fmt.Sprintf("\n\n=========== daemon.go: Starting ALLOCATE\n"))
+
 	conf := NetConf{}
 	if err := json.Unmarshal(args.StdinData, &conf); err != nil {
 		return fmt.Errorf("error parsing netconf: %v", err)
 	}
+	debugLog(fmt.Sprintf("\n\n=========== daemon.go: conf:  %+v\n", conf))
 
 	optsRequesting, optsProviding, err := prepareOptions(args.Args, conf.IPAM.ProvideOptions, conf.IPAM.RequestOptions)
 	if err != nil {
@@ -87,8 +90,12 @@ func (d *DHCP) Allocate(args *skel.CmdArgs, result *current.Result) error {
 	if err != nil {
 		return err
 	}
+	debugLog(fmt.Sprintf("\n\n=========== daemon.go: lease: %+v\n", l))
+
 
 	ipn, err := l.IPNet()
+	debugLog(fmt.Sprintf("\n\n=========== daemon.go: ipn: %+v\n", ipn))
+
 	if err != nil {
 		l.Stop()
 		return err
@@ -100,7 +107,9 @@ func (d *DHCP) Allocate(args *skel.CmdArgs, result *current.Result) error {
 		Address: *ipn,
 		Gateway: l.Gateway(),
 	}}
+
 	result.Routes = l.Routes()
+	debugLog(fmt.Sprintf("\n\n=========== daemon.go: result: %+v\n", result))
 
 	return nil
 }
@@ -222,3 +231,4 @@ func runDaemon(
 	<-done
 	return nil
 }
+
