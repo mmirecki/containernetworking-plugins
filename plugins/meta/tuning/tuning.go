@@ -330,12 +330,14 @@ func cmdAdd(args *skel.CmdArgs) error {
 
 	err = ns.WithNetNSPath(args.Netns, func(_ ns.NetNS) error {
 		for key, value := range tuningConf.SysCtl {
+			key = strings.Replace(key, ".", "/", -1)
+
 			// If the key contains `IFNAME` - substitute it with args.IfName
 			// to allow setting sysctls on a particular interface, on which
 			// other operations (like mac/mtu setting) are performed
 			key = strings.Replace(key, "IFNAME", args.IfName, 1)
 
-			fileName := filepath.Join("/proc/sys", strings.Replace(key, ".", "/", -1))
+			fileName := filepath.Join("/proc/sys", key)
 
 			// Refuse to modify sysctl parameters that don't belong
 			// to the network subsystem.
